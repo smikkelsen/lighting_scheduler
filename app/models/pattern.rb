@@ -17,7 +17,8 @@ class Pattern < ApplicationRecord
   def activate(zones=:all)
     zones = parameterize_zones(zones)
     pattern = { file: full_path, state: 1, zoneName: zones, data: "", id: "" }
-    WebsocketMessageHandler.msg({ cmd: 'toCtlrSet', "runPattern": pattern })
+    msg = { cmd: 'toCtlrSet', "runPattern": pattern }
+    WebsocketMessageHandler.msg(msg)
   end
 
   def full_path
