@@ -9,15 +9,19 @@ module ZoneHelper
     end
     zones = zones.map do |z|
       if z.is_a? Integer
-        Zone.find_by_id(z)&.name
+        Zone.current.find_by_id(z)&.name
       elsif z.is_a? Zone
-        z.name
+        Zone.current.find_by_id(z.id)&.name
       elsif z.is_a? String
-        z
+        if z.size == 36 && z.split('-').size == 5
+          Zone.current.find_by_uuid(z)&.name
+        else
+          Zone.current.find_by_name(z)&.name
+        end
       end
     end
-    zones = zones - Array.wrap(nil)
-    return zones
+    puts zones
+    return zones - [nil]
   end
 
   def turn_off(zones = :all)
@@ -25,9 +29,21 @@ module ZoneHelper
     WebsocketMessageHandler.msg({ cmd: 'toCtlrSet', "runPattern": pattern })
   end
 
+  def uuid_from_attributes
+    data = {
+      pixel_count: self.pixel_count,
+      port_map: self.port_map
+    }
+    Digest::UUID.uuid_from_hash(Digest::SHA1, "ZoneHash", data.to_json)
+  end
+
   class_methods do
     def turn_off(zones = :all)
       self.new.turn_off(zones)
+    end
+
+    def uuid_from_json(zone)
+      Zone.new(pixel_count: zone['numPixels'], port_map: zone['portMap']).uuid_from_attributes
     end
   end
 end

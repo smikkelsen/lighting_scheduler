@@ -14,11 +14,16 @@ class Pattern < ApplicationRecord
     Pattern.where.not(id: updated).destroy_all
   end
 
-  def activate(zones=:all)
+  def activate(zones = :all)
     zones = parameterize_zones(zones)
+    if zones.empty?
+      Rails.logger.debug("No matching zones to run pattern")
+      return
+    end
     pattern = { file: full_path, state: 1, zoneName: zones, data: "", id: "" }
     msg = { cmd: 'toCtlrSet', "runPattern": pattern }
-    WebsocketMessageHandler.msg(msg)
+    Rails.logger.debug msg
+    # WebsocketMessageHandler.msg(msg)
   end
 
   def full_path

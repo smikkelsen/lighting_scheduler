@@ -10,21 +10,22 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_05_22_053430) do
+ActiveRecord::Schema.define(version: 2022_05_24_065003) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
-  create_table "display_pattern_zones", force: :cascade do |t|
-    t.integer "display_pattern_id"
-    t.integer "zone_id"
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
-  end
-
   create_table "display_patterns", force: :cascade do |t|
     t.integer "display_id"
     t.integer "pattern_id"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.jsonb "zones"
+  end
+
+  create_table "display_tags", force: :cascade do |t|
+    t.integer "display_id"
+    t.integer "tag_id"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
   end
@@ -34,6 +35,8 @@ ActiveRecord::Schema.define(version: 2022_05_22_053430) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.string "workflow_state"
+    t.integer "zone_set_id"
+    t.text "description"
   end
 
   create_table "patterns", force: :cascade do |t|
@@ -44,11 +47,26 @@ ActiveRecord::Schema.define(version: 2022_05_22_053430) do
     t.datetime "updated_at", precision: 6, null: false
   end
 
+  create_table "tags", force: :cascade do |t|
+    t.string "name"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+  end
+
+  create_table "zone_sets", force: :cascade do |t|
+    t.string "name"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+  end
+
   create_table "zones", force: :cascade do |t|
     t.string "name"
     t.integer "pixel_count"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.jsonb "port_map"
+    t.integer "zone_set_id"
+    t.string "uuid"
   end
 
 end

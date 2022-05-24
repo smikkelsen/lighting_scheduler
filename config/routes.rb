@@ -1,5 +1,8 @@
 Rails.application.routes.draw do
-  resources :displays, only: [:index, :activate]  do
+  resources :displays, only: [:index] do
+    collection do
+      get 'turn_off'
+    end
     member do
       get 'activate'
     end
