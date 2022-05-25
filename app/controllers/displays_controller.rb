@@ -2,7 +2,7 @@ class DisplaysController < ApplicationController
   before_action :set_display, only: [:activate]
 
   def index
-    @displays = Display.where(workflow_state: 'active')
+    @displays = Display.active
     render json: @displays.to_json
   end
 

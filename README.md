@@ -18,7 +18,7 @@ A single pattern can be activated:
 Pattern.first.activate(:all) # activate the pattern on all zones
 ```
      
-##Zone
+## Zone
 Zones are cached in the database much like Patterns. Zones that don't belong to a ZoneSet are considered the current
 zones. These zones are a reflection of the zones that are currently loaded in the Jellyfish controller. To be sure, you can 
 update cached definitions as shown below. this will pull all zones from the controller, find or create them based on the uuid
@@ -48,7 +48,7 @@ If you are worried about saving those, make sure to update cached zones, then cr
 ZoneSet.first.activate
 ```
 
-##Display
+## Display
 Think of the Display object as the final result that displays on the house.
 If you've got a collection of zones, each with individual patterns you'd like to 
 display, this is how they will be grouped together. In the example below you find
@@ -83,7 +83,7 @@ with the zone will win.
 To activate a Display, simply:
 `Display.first.activate`
                     
-##Tag
+## Tag
 A Tag is a way to categorize your Displays. For example, you may have a display called 'Fourth of July Chase' that you 
 Tag as 'July'. You may have a Display that does all warm white lights, that you tag as 'Security', and 'Christmas'. 
      

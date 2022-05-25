@@ -7,4 +7,10 @@ Rails.application.routes.draw do
       get 'activate'
     end
   end
+
+  resources :tags, only: [:index] do
+    member do
+      get 'activate_random_display'
+    end
+  end
 end
