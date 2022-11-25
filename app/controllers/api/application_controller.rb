@@ -1,4 +1,4 @@
-module API
+module Api
   module V1
     class ApplicationController < ActionController::Base
       before_action :authenticate_user_with_token
