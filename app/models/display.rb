@@ -6,6 +6,7 @@ class Display < ApplicationRecord
   accepts_nested_attributes_for :display_patterns
   has_many :display_tags, dependent: :destroy
   has_many :tags, through: :display_tags
+  accepts_nested_attributes_for :tags
 
   before_validation :init_workflow_state
 
@@ -15,6 +16,7 @@ class Display < ApplicationRecord
   scope :active, -> { where(workflow_state: 'active') }
 
   def activate
+    zone_set.activate
     display_patterns.each do |dp|
       dp.pattern.activate(dp.zones)
     end

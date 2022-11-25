@@ -11,7 +11,9 @@ class Tag < ApplicationRecord
   end
 
   def activate_random_display
-    self.displays.shuffle&.first&.activate
+    display = self.displays.shuffle&.first
+    display&.activate
+    display
   end
 
   def activate_random_pattern

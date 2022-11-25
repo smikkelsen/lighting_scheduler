@@ -1,4 +1,4 @@
-class DisplaysController < ApplicationController
+class API::V1::DisplaysController < API::V1::ApplicationController
   before_action :set_display, only: [:activate]
 
   def index

@@ -1,4 +1,4 @@
-class TagsController < ApplicationController
+class API::V1::TagsController < API::V1::ApplicationController
   before_action :set_tag, only: [:activate_random_display]
 
   def index

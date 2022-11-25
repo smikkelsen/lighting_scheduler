@@ -8,6 +8,7 @@ class Zone < ApplicationRecord
   validates :uuid, presence: true, uniqueness: {case_sensitive: false, scope: :zone_set_id}
 
   scope :current, -> { where(zone_set_id: nil) }
+  scope :in_set, -> { where.not(zone_set_id: nil) }
 
   def self.update_cached
     zones = WebsocketMessageHandler.msg({ cmd: 'toCtlrGet', get: [['zones']] })["zones"]
