@@ -1,26 +1,30 @@
-class API::V1::DisplaysController < API::V1::ApplicationController
-  before_action :set_display, only: [:activate]
+module API
+  module V1
+    class DisplaysController < API::V1::ApplicationController
+      before_action :set_display, only: [:activate]
 
-  def index
-    @displays = Display.active
-    render json: @displays.to_json
-  end
+      def index
+        @displays = Display.active
+        render json: @displays.to_json
+      end
 
-  def activate
-    @display.activate
-  end
+      def activate
+        @display.activate
+      end
 
-  def turn_off
-    Display.turn_off
-  end
+      def turn_off
+        Display.turn_off
+      end
 
-  private
+      private
 
-  def set_display
-    @display = Display.find(params[:id])
-  end
+      def set_display
+        @display = Display.find(params[:id])
+      end
 
-  def display_params
-    params.require(:display).permit()
+      def display_params
+        params.require(:display).permit()
+      end
+    end
   end
 end
