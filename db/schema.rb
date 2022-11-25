@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_05_24_065003) do
+ActiveRecord::Schema.define(version: 2022_10_13_061816) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -37,6 +37,13 @@ ActiveRecord::Schema.define(version: 2022_05_24_065003) do
     t.string "workflow_state"
     t.integer "zone_set_id"
     t.text "description"
+  end
+
+  create_table "pattern_tags", force: :cascade do |t|
+    t.integer "pattern_id"
+    t.integer "tag_id"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
   end
 
   create_table "patterns", force: :cascade do |t|

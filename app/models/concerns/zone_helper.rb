@@ -3,7 +3,7 @@ module ZoneHelper
 
   def parameterize_zones(zones)
     if zones == :all
-      zones = Zone.all.pluck(:name)
+      zones = Zone.current.pluck(:name)
     else
       zones = Array.wrap(zones)
     end

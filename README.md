@@ -17,7 +17,12 @@ A single pattern can be activated:
 ```ruby
 Pattern.first.activate(:all) # activate the pattern on all zones
 ```
-     
+
+You can activate a random pattern, optionally from within a specific folder.
+```ruby 
+Pattern.activate_random('Halloween', :all)
+```
+
 ## Zone
 Zones are cached in the database much like Patterns. Zones that don't belong to a ZoneSet are considered the current
 zones. These zones are a reflection of the zones that are currently loaded in the Jellyfish controller. To be sure, you can 
@@ -84,17 +89,20 @@ To activate a Display, simply:
 `Display.first.activate`
                     
 ## Tag
-A Tag is a way to categorize your Displays. For example, you may have a display called 'Fourth of July Chase' that you 
+A Tag is a way to categorize your Patterns and Displays. For example, you may have a display called 'Fourth of July Chase' that you 
 Tag as 'July'. You may have a Display that does all warm white lights, that you tag as 'Security', and 'Christmas'. 
      
-Tag a display:
+Tag a pattern or display:
 ```ruby 
 display.tags = [Tag.first]
+pattern.tags = [Tag.first]
 ```
 
-You can activate a random display from a tag. Say you have 10 variations of displays all Tagged with 'July'. 
+You can activate a random pattern, display, or either from a tag. Say you have 10 variations of displays all Tagged with 'July'. 
 ```ruby 
-Tag.find_by_name('July').activate_random_display
+Tag.find_by_name('July').activate_random_display # This will only choose from displays tagged with 'July'
+Tag.find_by_name('July').activate_random_pattern # This will only choose from patterns tagged with 'July'
+Tag.find_by_name('July').activate_random # This will choose from both patterns and displays tagged with 'July'
 ```
 
 ### Turning lights off

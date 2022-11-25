@@ -1,6 +1,9 @@
 class Pattern < ApplicationRecord
   include ZoneHelper
 
+  has_many :pattern_tags, dependent: :destroy
+  has_many :tags, through: :pattern_tags
+
   def self.update_cached
     patterns = WebsocketMessageHandler.msg({ cmd: 'toCtlrGet', get: [['patternFileList']] })["patternFileList"]
     updated = []
@@ -14,6 +17,14 @@ class Pattern < ApplicationRecord
     Pattern.where.not(id: updated).destroy_all
   end
 
+  def self.activate_random(folder = nil, zones = :all)
+    patterns = Pattern.all
+    patterns = patterns.where(folder: folder) if folder
+    p = patterns.shuffle.first
+    p.activate(zones)
+    p.full_path
+  end
+
   def activate(zones = :all)
     zones = parameterize_zones(zones)
     if zones.empty?
@@ -23,7 +34,7 @@ class Pattern < ApplicationRecord
     pattern = { file: full_path, state: 1, zoneName: zones, data: "", id: "" }
     msg = { cmd: 'toCtlrSet', "runPattern": pattern }
     Rails.logger.debug msg
-    # WebsocketMessageHandler.msg(msg)
+    WebsocketMessageHandler.msg(msg)
   end
 
   def full_path
