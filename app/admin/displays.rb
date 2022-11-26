@@ -23,7 +23,7 @@ ActiveAdmin.register Display do
   end
 
   action_item :activate_display, only: :show do
-    link_to 'Activate Display', activate_display_path(display), method: :post
+    link_to 'Activate Display', activate_display_path(resource), method: :post
   end
 
   member_action :activate, method: :post do
