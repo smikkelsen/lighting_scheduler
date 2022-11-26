@@ -16,11 +16,12 @@ class Display < ApplicationRecord
   scope :active, -> { where(workflow_state: 'active') }
 
   def activate
+    turn_off(:all)
+    sleep(1)
     zone_set.activate
-    sleep(5)
+    sleep(1)
     display_patterns.each do |dp|
       dp.pattern.activate(dp.zones)
-      sleep(3)
     end
   end
 
