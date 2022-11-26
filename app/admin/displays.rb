@@ -22,6 +22,10 @@ ActiveAdmin.register Display do
     [:name, :workflow_state, :zone_set_id, :description, tag_ids: [], display_patterns_attributes: [:id, :pattern_id, :_destroy, zones: []]]
   end
 
+  action_item :activate_display, only: :show do
+    link_to 'Activate Display', activate_display_path(resource), method: :post
+  end
+
   member_action :activate, method: :post do
     resource.activate
     redirect_back fallback_location: display_path(resource), notice: "Activated '#{resource&.name}' display"
