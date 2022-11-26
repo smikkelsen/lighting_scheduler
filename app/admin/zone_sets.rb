@@ -17,7 +17,7 @@ ActiveAdmin.register ZoneSet do
     redirect_to edit_zone_set_path(zone_set), notice: "Zone Set Created, update"
   end
 
-  collection_action :activate, method: :post do
+  member_action :activate, method: :post do
     resource.activate
     redirect_back fallback_location: zone_set_path(resource), notice: "Activated '#{resource&.name}' Zone Set"
   end
