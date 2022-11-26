@@ -9,7 +9,7 @@ ActiveAdmin.register ZoneSet do
   end
 
   action_item :activate_zone_set, only: :show do
-    link_to 'Activate Zone Set', activate_zone_set_path(zone_set), method: :post
+    link_to 'Activate Zone Set', activate_zone_sets_path(zone_set), method: :post
   end
 
   collection_action :create_from_current, method: :post do
