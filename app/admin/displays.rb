@@ -11,7 +11,7 @@ ActiveAdmin.register Display do
       f.has_many :display_patterns, heading: false,
                  allow_destroy: true,
                  new_record: true do |a|
-        a.input :pattern, as: :searchable_select
+        a.input :pattern, as: :searchable_select, collection: Pattern.all.order('folder, name').map {|p| ["#{p.folder}/#{p.name}", p.id]}
         a.input :zones, as: :searchable_select, multiple: true, collection: Zone.in_set.order(:zone_set_id).map {|z| ["#{z.zone_set&.name}: #{z.name}", z.id]}
       end
     end
