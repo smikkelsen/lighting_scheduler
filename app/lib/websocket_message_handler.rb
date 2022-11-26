@@ -1,13 +1,14 @@
 module WebsocketMessageHandler
 
   def self.msg(msg)
+    Rails.logger.debug('=' * 80)
     msg = msg.to_json if msg.is_a?(Hash)
     EM.run do
       ws = Faye::WebSocket::Client.new("ws://#{ENV['WEBSOCKET_CONTROLLER_IP']}:9000/ws")
 
       ws.on(:open) do |_event|
         Rails.logger.debug "Connected"
-        Rails.logger.debug("sending msg: #{msg}")
+        Rails.logger.debug("sending msg: ***#{msg}***")
         ws.send(msg)
       end
 
@@ -20,5 +21,6 @@ module WebsocketMessageHandler
       end
 
     end
+    Rails.logger.debug('=' * 80)
   end
 end
