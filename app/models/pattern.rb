@@ -26,6 +26,7 @@ class Pattern < ApplicationRecord
   end
 
   def activate(zones = :all)
+    Rails.logger.debug("Activating Pattern with the following zones: #{zones}")
     zones = parameterize_zones(zones)
     if zones.empty?
       Rails.logger.error("No matching zones to run pattern")
