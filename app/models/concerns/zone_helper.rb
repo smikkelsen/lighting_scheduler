@@ -8,19 +8,22 @@ module ZoneHelper
       zones = Array.wrap(zones)
     end
     zones = zones.map do |z|
-      if z.is_a? Integer
-        Zone.current.find_by_id(z)&.name
-      elsif z.is_a? Zone
-        Zone.current.find_by_id(z.id)&.name
-      elsif z.is_a? String
-        if z.size == 36 && z.split('-').size == 5
-          Zone.current.find_by_uuid(z)&.name
-        else
-          Zone.current.find_by_name(z)&.name
-        end
-      end
+      zone = if z.is_a? Integer
+               Zone.find_by_id(z)
+             elsif z.is_a? Zone
+               Zone.find_by_id(z.id)
+             elsif z.is_a? String
+               if z.size == 36 && z.split('-').size == 5
+                 Zone.find_by_uuid(z)
+               elsif z.to_i != 0
+                 Zone.find_by_id(z.to_i)
+               else
+                 Zone.find_by_name(z)
+               end
+             end
+      zone&.name
     end
-    puts zones
+    Rails.logger.debug(zones.to_s)
     return zones - [nil]
   end
 
