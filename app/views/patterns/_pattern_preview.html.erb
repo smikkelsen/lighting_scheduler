@@ -1,0 +1,5 @@
+<div class="colorSwatchContainer">
+  <% Array.wrap(pattern&.data&.dig('colors')).in_groups_of(3).each do |color| %>
+    <div class='colorSwatch' style="background-color: rgb(<%=color.join(',') %>)"></div>
+  <% end %>
+</div>

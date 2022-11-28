@@ -1,6 +1,30 @@
 ActiveAdmin.register Pattern do
   config.comments = false
-  
+
+  index do
+    column :folder
+    column :name
+    column :custom
+    column 'Preview' do |pattern|
+      render 'patterns/pattern_preview', { pattern: pattern }
+    end
+    actions
+  end
+
+  show do
+    attributes_table do
+      row 'Name' do |p|
+        [p.folder, p.name].join('/')
+      end
+      row :custom
+    end
+
+    panel 'Preview' do
+      render 'patterns/pattern_preview', { pattern: pattern }
+    end
+
+  end
+
   form do |f|
     f.inputs 'Details' do
       f.input :name

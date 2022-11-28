@@ -17,6 +17,15 @@ class Pattern < ApplicationRecord
     Pattern.where.not(id: updated).destroy_all
   end
 
+  def self.cache_pattern_data(force_all=false)
+    patterns = force_all ? Pattern.all : Pattern.where(data: nil)
+    patterns.each do |p|
+      d = p.pattern_data
+      p.data = JSON.parse(d['patternFileData']['jsonData'])
+      p.save
+    end
+  end
+
   def self.activate_random(folder = nil, zones = :all)
     patterns = Pattern.all
     patterns = patterns.where(folder: folder) if folder

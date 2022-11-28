@@ -16,3 +16,15 @@
 // For example, to change the default status-tag color:
 //
 //   .status_tag { background: #6090DB; }
+
+.colorSwatchContainer {
+  display: inline-block;
+
+  .colorSwatch {
+    float: left;
+    height: 20px;
+    width: 20px;
+    margin-bottom: 15px;
+    border: 1px solid black;
+  }
+}

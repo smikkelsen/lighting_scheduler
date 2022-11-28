@@ -11,6 +11,7 @@ the name changes.
 Update the cached definitions
 ```ruby
 Pattern.update_cached
+Pattern.cache_pattern_data
 ``` 
 
 A single pattern can be activated:

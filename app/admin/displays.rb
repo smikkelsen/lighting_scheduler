@@ -1,5 +1,26 @@
 ActiveAdmin.register Display do
 
+  show do
+    attributes_table do
+      row :name
+      row :zone_set
+      row :workflow_state
+      row :description
+    end
+
+    panel "Display Patterns" do
+      table_for resource.display_patterns do
+        column :pattern
+        column 'Colors' do |dp|
+          render 'patterns/pattern_preview', { pattern: dp.pattern }
+        end
+        column 'Zones' do |dp|
+          resource.parameterize_zones(dp.zones)
+        end
+      end
+    end
+  end
+
   form do |f|
     f.inputs 'Details' do
       f.input :name
