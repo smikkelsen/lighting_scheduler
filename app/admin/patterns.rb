@@ -41,6 +41,7 @@ ActiveAdmin.register Pattern do
 
   collection_action :update_cached, method: :post do
     Pattern.update_cached
+    Pattern.cache_pattern_data(true)
     redirect_to collection_path, notice: "Patterns Updated!"
   end
 
