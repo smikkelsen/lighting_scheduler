@@ -1,5 +1,7 @@
 class ZoneSet < ApplicationRecord
 
+  after_save :update_default_zone_set
+
   has_many :zones, dependent: :destroy
   has_many :displays, dependent: :restrict_with_exception
 
@@ -22,4 +24,9 @@ class ZoneSet < ApplicationRecord
     Zone.update_cached
   end
 
+  private
+  def update_default_zone_set
+    return unless self.default_zone_set
+    ZoneSet.where.not(id: self.id).update_all(default_zone_set: false)
+  end
 end

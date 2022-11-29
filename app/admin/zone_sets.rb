@@ -2,7 +2,7 @@ ActiveAdmin.register ZoneSet do
   config.comments = false
 
   permit_params do
-    [:name]
+    [:name, :default_zone_set]
   end
   action_item :create_from_current, only: :index do
     link_to 'Create Set From Current', create_from_current_zone_sets_path, method: :post

@@ -17,9 +17,9 @@ class Display < ApplicationRecord
 
   def activate
     turn_off(:all)
-    sleep(1)
+    sleep(0.6)
     zone_set.activate
-    sleep(1)
+    sleep(0.6)
     display_patterns.each do |dp|
       dp.pattern.activate(dp.zones)
     end
