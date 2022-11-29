@@ -17,7 +17,11 @@ class Tag < ApplicationRecord
   end
 
   def activate_random_pattern
-    self.patterns.shuffle&.first&.activate
+    Display.turn_off(:all)
+    sleep(0.6)
+    ZoneSet.default.first&.activate
+    sleep(0.6)
+    self.patterns.shuffle&.first&.activate(:all)
   end
 
 end

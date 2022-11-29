@@ -128,6 +128,10 @@ Tag.find_by_name('July').activate_random_pattern # This will only choose from pa
 Tag.find_by_name('July').activate_random # This will choose from both patterns and displays tagged with 'July'
 ```
 
+Since a Display has a ZoneSet associated with it, it will activate the ZoneSet before activating the individual patterns. 
+Patterns do not have a ZoneSet associated with them, but it is assumed you will usually use these on a default or whole house
+Zone. When a pattern is activated through a tag, the ZoneSet that you designated as the Default, will first be activated.
+
 ### Turning lights off
 
 The ZoneHelper concern is on multiple classes and has an instance and class method that works the same. The exception

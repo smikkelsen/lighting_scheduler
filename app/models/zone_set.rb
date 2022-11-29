@@ -7,6 +7,8 @@ class ZoneSet < ApplicationRecord
 
   validates :name, presence: true, uniqueness: { case_sensitive: false }
 
+  scope :default, -> { where(default_zone_set: true) }
+
   def self.create_from_current(name)
     zs = ZoneSet.create(name: name)
     Zone.current.each do |cz|
