@@ -31,11 +31,27 @@ ActiveAdmin.register Tag do
   
   permit_params { [:name] }
 
+  action_item :activate_random, only: :show do
+    link_to 'Activate Random', activate_random_tag_path(tag), method: :post
+  end
   action_item :activate_random_display, only: :show do
     link_to 'Activate Random Display', activate_random_display_tag_path(tag), method: :post
   end
+  action_item :activate_random_pattern, only: :show do
+    link_to 'Activate Random Pattern', activate_random_pattern_tag_path(tag), method: :post
+  end
   member_action :activate_random_display, method: :post do
     display = resource.activate_random_display
+    notice = display ? "Activated #{display.name}" : "No display chosen"
+    redirect_to tag_path(resource), notice: notice
+  end
+  member_action :activate_random_pattern, method: :post do
+    display = resource.activate_random_pattern
+    notice = display ? "Activated #{display.name}" : "No display chosen"
+    redirect_to tag_path(resource), notice: notice
+  end
+  member_action :activate_random, method: :post do
+    display = resource.activate_random
     notice = display ? "Activated #{display.name}" : "No display chosen"
     redirect_to tag_path(resource), notice: notice
   end

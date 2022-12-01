@@ -7,7 +7,9 @@ class Tag < ApplicationRecord
   validates_presence_of :name
 
   def activate_random
-    self.displays.concat(self.patterns).shuffle.first.activate
+    resource = self.displays.to_a.concat(self.patterns.to_a).shuffle.first
+    resource&.activate
+    resource
   end
 
   def activate_random_display
@@ -21,7 +23,9 @@ class Tag < ApplicationRecord
     sleep(0.6)
     ZoneSet.default.first&.activate
     sleep(0.6)
-    self.patterns.shuffle&.first&.activate(:all)
+    pattern = self.patterns.shuffle&.first
+    pattern&.activate(:all)
+    pattern
   end
 
 end

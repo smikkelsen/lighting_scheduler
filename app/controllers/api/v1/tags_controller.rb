@@ -6,8 +6,16 @@ class API::V1::TagsController < API::ApplicationController
     render json: @tags.to_json
   end
 
+  def activate_random
+    @tag.activate_random
+  end
+
   def activate_random_display
     @tag.activate_random_display
+  end
+
+  def activate_random_pattern
+    @tag.activate_random_pattern
   end
 
   private

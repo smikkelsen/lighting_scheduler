@@ -19,7 +19,9 @@ Rails.application.routes.draw do
 
       resources :tags, only: [:index] do
         member do
+          get 'activate_random'
           get 'activate_random_display'
+          get 'activate_random_pattern'
         end
       end
     end
