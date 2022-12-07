@@ -1,5 +1,5 @@
 class API::V1::TagsController < API::ApplicationController
-  before_action :set_tag, only: [:activate_random_display]
+  before_action :set_tag, only: [:activate_random_display, :activate_random, :activate_random_pattern]
 
   def index
     @tags = Tag.all
