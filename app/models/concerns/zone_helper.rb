@@ -4,6 +4,8 @@ module ZoneHelper
   def parameterize_zones(zones)
     if zones == :all
       zones = Zone.current.pluck(:name)
+    elsif zones == :default
+      zones = ZoneSet.default.first&.zones&.pluck(:name)
     else
       zones = Array.wrap(zones)
     end

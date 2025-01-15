@@ -8,7 +8,11 @@ class Tag < ApplicationRecord
 
   def activate_random
     resource = self.displays.to_a.concat(self.patterns.to_a).shuffle.first
-    resource&.activate
+    if resource.is_a?(Pattern)
+      resource&.activate(:default)
+    else
+      resource&.activate
+    end
     resource
   end
 
