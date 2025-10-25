@@ -13,7 +13,6 @@ require "action_text/engine"
 require "action_view/railtie"
 require "action_cable/engine"
 require "sprockets/railtie"
-require 'dotenv/load'
 
 # require "rails/test_unit/railtie"
 
@@ -24,7 +23,7 @@ Bundler.require(*Rails.groups)
 module LightingScheduler
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
-    config.load_defaults 6.1
+    config.load_defaults 7.2
 
     # Configuration for the application, engines, and railties goes here.
     #
