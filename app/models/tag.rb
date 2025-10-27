@@ -9,7 +9,10 @@ class Tag < ApplicationRecord
   def activate_random
     resource = self.displays.to_a.concat(self.patterns.to_a).shuffle.first
     if resource.is_a?(Pattern)
-      resource&.activate(:default)
+      default_zs = ZoneSet.default
+      return unless default_zs
+      default_zs.activate
+      resource&.activate
     else
       resource&.activate
     end

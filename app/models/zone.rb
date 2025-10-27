@@ -3,7 +3,6 @@ class Zone < ApplicationRecord
   before_create :set_uuid
 
   belongs_to :zone_set, optional: true
-  serialize :port_map, coder: YAML
 
   validates :uuid, presence: true, uniqueness: {case_sensitive: false, scope: :zone_set_id}
 

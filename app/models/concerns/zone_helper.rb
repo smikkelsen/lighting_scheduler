@@ -39,7 +39,7 @@ module ZoneHelper
       pixel_count: self.pixel_count,
       port_map: self.port_map
     }
-    Digest::UUID.uuid_from_hash(Digest::SHA1, "ZoneHash", data.to_json)
+    Digest::UUID.uuid_from_hash(Digest::SHA1, "8b958e0b-5baf-45d0-b5a2-6d7d8c6c3b4e", data.to_json)
   end
 
   class_methods do
