@@ -52,3 +52,5 @@ gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 
 gem 'faye-websocket'
 gem 'dotenv-rails'
+
+gem 'nokogiri', '~> 1.18', platforms: [:ruby]
