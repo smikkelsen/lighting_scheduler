@@ -1,29 +1,35 @@
-unless ENV['RAILS_ENV'] == 'development'
-  # Change to match your CPU core count
-  workers ENV['CPU_CORES'] || 2
+# config/puma.rb
 
-  # Min and Max threads per worker
+unless ENV['RAILS_ENV'] == 'development'
+  # === Concurrency ===
+  workers Integer(ENV['CPU_CORES'] || 2)
+
   threads_count = Integer(ENV['RAILS_MAX_THREADS'] || 10)
   threads threads_count, threads_count
 
+  # === Paths / Environment ===
   app_dir = File.expand_path("../..", __FILE__)
   tmp_dir = "#{app_dir}/tmp"
-
-  # Default to production
   environment ENV['RAILS_ENV'] || "production"
-  daemonize true
 
-  # Set up socket location
+  # Puma 6+: no daemon mode. Use a supervisor (systemd) instead.
+  # daemonize true  # ❌ removed
+
+  # === Sockets / PIDs / State ===
   bind "unix://#{tmp_dir}/sockets/puma.sock"
-
-  # Logging
-  stdout_redirect "#{app_dir}/log/puma.stdout.log", "#{app_dir}/log/puma.stderr.log", true
-
-  # Set master PID and state locations
   pidfile "#{tmp_dir}/pids/puma.pid"
   state_path "#{tmp_dir}/pids/puma.state"
-  activate_control_app
 
+  # === Logging ===
+  # If you run under systemd, consider logging to stdout/stderr instead of redirecting.
+  stdout_redirect "#{app_dir}/log/puma.stdout.log", "#{app_dir}/log/puma.stderr.log", true
+
+  # === Control app for pumactl ===
+  # Use a dedicated control socket and token.
+  activate_control_app "unix://#{tmp_dir}/sockets/pumactl.sock",
+                       { auth_token: ENV.fetch('PUMA_CTL_TOKEN', 'changeme') }
+
+  # === Preload & Boot ===
   preload_app!
 
   on_worker_boot do |worker_id|
