@@ -4,6 +4,14 @@ class Pattern < ApplicationRecord
   has_many :pattern_tags, dependent: :destroy
   has_many :tags, through: :pattern_tags
 
+  def self.ransackable_associations(auth_object = nil)
+    ["pattern_tags", "tags"]
+  end
+
+  def self.ransackable_attributes(auth_object = nil)
+    ["name", "folder", "custom", "data", "created_at", "updated_at"]
+  end
+
   def self.update_cached
     patterns = WebsocketMessageHandler.msg({ cmd: 'toCtlrGet', get: [['patternFileList']] })["patternFileList"]
     updated = []

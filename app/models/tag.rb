@@ -4,6 +4,14 @@ class Tag < ApplicationRecord
   has_many :pattern_tags, dependent: :destroy
   has_many :patterns, through: :pattern_tags
 
+  def self.ransackable_associations(auth_object = nil)
+    ["display_tags", "displays", "pattern_tags", "patterns"]
+  end
+
+  def self.ransackable_attributes(auth_object = nil)
+    ["name", "created_at", "updated_at"]
+  end
+
   validates_presence_of :name
 
   def activate_random

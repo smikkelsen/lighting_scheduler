@@ -376,6 +376,7 @@ DEPENDENCIES
   faye-websocket
   importmap-rails
   jbuilder (~> 2.7)
+  nokogiri (~> 1.18)
   pg
   puma (~> 6.0)
   rack-mini-profiler

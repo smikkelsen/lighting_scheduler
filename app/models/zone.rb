@@ -4,6 +4,14 @@ class Zone < ApplicationRecord
 
   belongs_to :zone_set, optional: true
 
+  def self.ransackable_associations(auth_object = nil)
+    ["zone_set"]
+  end
+
+  def self.ransackable_attributes(auth_object = nil)
+    ["name", "uuid", "pixel_count", "port_map", "zone_set_id", "created_at", "updated_at"]
+  end
+
   validates :uuid, presence: true, uniqueness: {case_sensitive: false, scope: :zone_set_id}
 
   scope :current, -> { where(zone_set_id: nil) }

@@ -1,0 +1,37 @@
+[Unit]
+Description=Puma HTTP Server for Lighting Scheduler
+After=network.target postgresql.service
+
+[Service]
+Type=notify
+User=deploy
+Group=deploy
+WorkingDirectory=/home/deploy/webapps/lighting_scheduler
+
+# Environment variables
+Environment=RAILS_ENV=production
+Environment=RACK_ENV=production
+
+# Load additional environment variables from .env files
+EnvironmentFile=-/home/deploy/webapps/lighting_scheduler/.env.production.local
+EnvironmentFile=-/home/deploy/webapps/lighting_scheduler/.env.local
+
+# Puma command
+ExecStart=/home/deploy/.rbenv/bin/rbenv exec bundle exec puma -C config/puma.rb
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Process management
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+# Logging
+StandardOutput=append:/home/deploy/webapps/lighting_scheduler/log/puma.stdout.log
+StandardError=append:/home/deploy/webapps/lighting_scheduler/log/puma.stderr.log
+SyslogIdentifier=lighting_scheduler_puma
+
+[Install]
+WantedBy=multi-user.target

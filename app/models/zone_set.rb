@@ -5,6 +5,14 @@ class ZoneSet < ApplicationRecord
   has_many :zones, dependent: :destroy
   has_many :displays, dependent: :restrict_with_exception
 
+  def self.ransackable_associations(auth_object = nil)
+    ["zones", "displays"]
+  end
+
+  def self.ransackable_attributes(auth_object = nil)
+    ["name", "default_zone_set", "created_at", "updated_at"]
+  end
+
   validates :name, presence: true, uniqueness: { case_sensitive: false }
 
   scope :default, -> { where(default_zone_set: true).first }
