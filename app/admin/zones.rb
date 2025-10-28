@@ -1,6 +1,14 @@
 ActiveAdmin.register Zone do
   config.comments = false
 
+  # Configure filters
+  filter :name
+  filter :zone_set
+  filter :pixel_count
+  filter :uuid
+  filter :created_at
+  filter :updated_at
+
   # permit_params do
   #   permitted = [:name, :pixel_count, :port_map, :zone_set_id, :uuid]
   #   permitted << :other if params[:action] == 'create' && current_user.admin?

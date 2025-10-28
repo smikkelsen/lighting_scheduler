@@ -1,6 +1,11 @@
 ActiveAdmin.register Tag do
   config.comments = false
 
+  # Configure filters - exclude join table associations
+  filter :name
+  filter :created_at
+  filter :updated_at
+
   show do
     attributes_table do
       row :name

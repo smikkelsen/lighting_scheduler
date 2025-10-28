@@ -1,4 +1,10 @@
 ActiveAdmin.register Display do
+  # Configure filters - exclude join table associations
+  filter :name
+  filter :workflow_state, as: :select, collection: ['active', 'inactive']
+  filter :zone_set
+  filter :created_at
+  filter :updated_at
 
   show do
     attributes_table do

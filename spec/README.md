@@ -46,7 +46,7 @@ bundle exec rspec --format documentation
 
 The test suite covers:
 
-### Models
+### Models (spec/models/)
 - **User**: Authentication, validations, Ransack configuration
 - **Zone**: Associations, validations, scopes (current/in_set), UUID generation
 - **ZoneSet**: Associations, validations, default zone set logic
@@ -57,11 +57,30 @@ The test suite covers:
 - **DisplayTag**: Join model associations
 - **PatternTag**: Join model associations
 
-### Factories
+### API Request Specs (spec/requests/api/v1/)
+- **Displays API**:
+  - `GET /api/v1/displays` - List active displays
+  - `GET /api/v1/displays/:id/activate` - Activate specific display
+  - `GET /api/v1/displays/turn_off` - Turn off all displays
+  - HTTP Basic authentication tests
+  - Error handling (404, 401)
+
+- **Tags API**:
+  - `GET /api/v1/tags` - List all tags
+  - `GET /api/v1/tags/:id/activate_random` - Activate random pattern or display
+  - `GET /api/v1/tags/:id/activate_random_display` - Activate random display
+  - `GET /api/v1/tags/:id/activate_random_pattern` - Activate random pattern
+  - HTTP Basic authentication tests
+  - Error handling (404, 401)
+
+### Factories (spec/factories/)
 All models have corresponding factories with traits for different scenarios:
 - Default factories for basic object creation
 - Traits for specific states (`:default`, `:custom`, `:with_tags`, etc.)
 - Nested object creation support
+
+### Shared Examples (spec/support/)
+- **API Authentication**: Reusable authentication tests for all API endpoints
 
 ## Testing Patterns
 
@@ -93,6 +112,27 @@ describe '#full_path' do
   it 'combines folder and name' do
     pattern = build(:pattern, folder: 'Halloween', name: 'Spooky')
     expect(pattern.full_path).to eq('Halloween/Spooky')
+  end
+end
+```
+
+### API Request Specs
+```ruby
+describe 'GET /api/v1/displays' do
+  include_context 'API authentication'
+
+  it 'returns active displays with valid auth' do
+    display = create(:display, workflow_state: 'active')
+    get '/api/v1/displays', headers: auth_headers
+
+    expect(response).to have_http_status(:success)
+    json = JSON.parse(response.body)
+    expect(json.first['id']).to eq(display.id)
+  end
+
+  it 'returns 401 without auth' do
+    get '/api/v1/displays'
+    expect(response).to have_http_status(:unauthorized)
   end
 end
 ```

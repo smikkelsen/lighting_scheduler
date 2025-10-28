@@ -13,6 +13,7 @@ gem 'puma', '~> 6.0'
 gem 'sprockets-rails'
 # Use SCSS for stylesheets
 gem 'dartsass-rails'
+gem 'sassc-rails' # Required for Sprockets to compile SCSS files
 # Import maps for JavaScript - Rails 7 default
 gem 'importmap-rails'
 # Hotwire's SPA-like page accelerator

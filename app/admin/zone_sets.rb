@@ -1,6 +1,12 @@
 ActiveAdmin.register ZoneSet do
   config.comments = false
 
+  # Configure filters - exclude has_many associations that cause Ransack issues
+  filter :name
+  filter :default_zone_set
+  filter :created_at
+  filter :updated_at
+
   permit_params do
     [:name, :default_zone_set]
   end

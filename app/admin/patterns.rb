@@ -1,6 +1,13 @@
 ActiveAdmin.register Pattern do
   config.comments = false
 
+  # Configure filters - exclude join table associations
+  filter :name
+  filter :folder
+  filter :custom
+  filter :created_at
+  filter :updated_at
+
   index do
     column :folder
     column :name
