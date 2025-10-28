@@ -1,6 +1,6 @@
 class Zone < ApplicationRecord
   include ZoneHelper
-  before_create :set_uuid
+  before_validation :set_uuid, on: :create
 
   belongs_to :zone_set, optional: true
 

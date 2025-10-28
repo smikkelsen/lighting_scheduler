@@ -3,13 +3,14 @@ class Display < ApplicationRecord
 
   belongs_to :zone_set
   has_many :display_patterns, dependent: :destroy
+  has_many :patterns, through: :display_patterns
   accepts_nested_attributes_for :display_patterns
   has_many :display_tags, dependent: :destroy
   has_many :tags, through: :display_tags
   accepts_nested_attributes_for :tags
 
   def self.ransackable_associations(auth_object = nil)
-    ["display_patterns", "display_tags", "tags", "zone_set"]
+    ["display_patterns", "display_tags", "patterns", "tags", "zone_set"]
   end
 
   def self.ransackable_attributes(auth_object = nil)

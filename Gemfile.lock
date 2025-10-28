@@ -114,6 +114,7 @@ GEM
       railties (>= 4.1.0)
       responders
       warden (~> 1.2.3)
+    diff-lcs (1.6.2)
     dotenv (3.1.8)
     dotenv-rails (3.1.8)
       dotenv (= 3.1.8)
@@ -122,6 +123,13 @@ GEM
     erb (5.1.1)
     erubi (1.13.1)
     eventmachine (1.2.7)
+    factory_bot (6.5.6)
+      activesupport (>= 6.1.0)
+    factory_bot_rails (6.5.1)
+      factory_bot (~> 6.5)
+      railties (>= 6.1.0)
+    faker (3.5.2)
+      i18n (>= 1.8.11, < 2)
     faye-websocket (0.12.0)
       eventmachine (>= 0.12.0)
       websocket-driver (>= 0.8.0)
@@ -299,6 +307,23 @@ GEM
     responders (3.2.0)
       actionpack (>= 7.0)
       railties (>= 7.0)
+    rspec-core (3.13.6)
+      rspec-support (~> 3.13.0)
+    rspec-expectations (3.13.5)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.13.0)
+    rspec-mocks (3.13.6)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.13.0)
+    rspec-rails (6.1.5)
+      actionpack (>= 6.1)
+      activesupport (>= 6.1)
+      railties (>= 6.1)
+      rspec-core (~> 3.13)
+      rspec-expectations (~> 3.13)
+      rspec-mocks (~> 3.13)
+      rspec-support (~> 3.13)
+    rspec-support (3.13.6)
     ruby2_keywords (0.0.5)
     sass-embedded (1.93.2-aarch64-linux-gnu)
       google-protobuf (~> 4.31)
@@ -318,6 +343,8 @@ GEM
       google-protobuf (~> 4.31)
     securerandom (0.4.1)
     select2-rails (4.0.13)
+    shoulda-matchers (6.5.0)
+      activesupport (>= 5.2.0)
     sprockets (4.2.2)
       concurrent-ruby (~> 1.0)
       logger
@@ -373,6 +400,8 @@ DEPENDENCIES
   debug
   devise
   dotenv-rails
+  factory_bot_rails
+  faker
   faye-websocket
   importmap-rails
   jbuilder (~> 2.7)
@@ -381,6 +410,8 @@ DEPENDENCIES
   puma (~> 6.0)
   rack-mini-profiler
   rails (~> 7.2.0)
+  rspec-rails (~> 6.1.0)
+  shoulda-matchers (~> 6.0)
   sprockets-rails
   stimulus-rails
   turbo-rails
