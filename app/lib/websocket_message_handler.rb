@@ -3,6 +3,8 @@ module WebsocketMessageHandler
   def self.msg(msg)
     Rails.logger.debug('=' * 80)
     msg = msg.to_json if msg.is_a?(Hash)
+    response = nil
+
     EM.run do
       ws = Faye::WebSocket::Client.new("ws://#{ENV['WEBSOCKET_CONTROLLER_IP']}:9000/ws")
 
@@ -16,11 +18,13 @@ module WebsocketMessageHandler
 
       ws.on(:message) do |resp|
         Rails.logger.debug "Received message: #{resp.data}"
+        response = JSON.parse(resp.data)
         ws.close
-        return JSON.parse(resp.data)
+        EM.stop
       end
 
     end
     Rails.logger.debug('=' * 80)
+    response
   end
 end
