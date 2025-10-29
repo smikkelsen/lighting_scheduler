@@ -165,9 +165,7 @@ RSpec.describe Pattern, type: :model do
 
     context 'with folder filter' do
       it 'activates a random pattern from specified folder' do
-        # Stub to ensure we get a pattern from Holiday folder
-        allow(Pattern).to receive_message_chain(:where, :shuffle, :first).and_return(pattern1)
-        expect(pattern1).to receive(:activate).with(:all)
+        expect_any_instance_of(Pattern).to receive(:activate).with(:all)
 
         result = Pattern.activate_random('Holiday')
         expect(['Holiday/Pattern 1', 'Holiday/Pattern 2']).to include(result)

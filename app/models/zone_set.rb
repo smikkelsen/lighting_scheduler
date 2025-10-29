@@ -15,7 +15,9 @@ class ZoneSet < ApplicationRecord
 
   validates :name, presence: true, uniqueness: { case_sensitive: false }
 
-  scope :default, -> { where(default_zone_set: true).first }
+  def self.default
+    where(default_zone_set: true).first
+  end
 
   def self.create_from_current(name)
     zs = ZoneSet.create(name: name)

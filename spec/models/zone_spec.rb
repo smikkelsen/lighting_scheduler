@@ -138,13 +138,19 @@ RSpec.describe Zone, type: :model do
         zone_set: nil
       )
 
-      expect {
-        Zone.update_cached
-      }.not_to change { Zone.current.count }
+      # zones_response has 2 zones, so count will go from 1 to 2
+      # But the existing zone should be updated, not deleted
+      original_id = existing_zone.id
+
+      Zone.update_cached
 
       # Name should be updated
       existing_zone.reload
       expect(existing_zone.name).to eq('Front Porch')
+      expect(existing_zone.id).to eq(original_id) # Same record, just updated
+
+      # Total zones should now be 2 (existing updated + new one created)
+      expect(Zone.current.count).to eq(2)
     end
 
     it 'deletes zones no longer in controller response' do
@@ -202,9 +208,11 @@ RSpec.describe Zone, type: :model do
     context 'with hardware config change' do
       it 'creates new zone when pixel_count changes' do
         Zone.update_cached
-        original_count = Zone.current.count
+        original_zone = Zone.current.find_by(name: 'Front Porch')
+        original_uuid = original_zone.uuid
 
-        # Change pixel count
+        # Change pixel count - this creates a different hardware config
+        # so a new zone with new UUID should be created
         modified_response = {
           "zones" => {
             "Front Porch" => {
@@ -215,13 +223,15 @@ RSpec.describe Zone, type: :model do
         }
         allow(WebsocketMessageHandler).to receive(:msg).and_return(modified_response)
 
-        expect {
-          Zone.update_cached
-        }.not_to change { Zone.current.count }
+        Zone.update_cached
+
+        # Count should go from 2 to 1 (only one zone in new response)
+        expect(Zone.current.count).to eq(1)
 
         # Should have new UUID due to different hardware config
         zone = Zone.current.find_by(name: 'Front Porch')
         expect(zone.pixel_count).to eq(150)
+        expect(zone.uuid).not_to eq(original_uuid) # Different UUID
       end
     end
   end

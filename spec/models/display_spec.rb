@@ -74,10 +74,18 @@ RSpec.describe Display, type: :model do
       allow(display).to receive(:turn_off)
       allow(zone_set).to receive(:activate)
 
-      expect(pattern1).to receive(:activate).with(['Zone 1'])
-      expect(pattern2).to receive(:activate).with(['Zone 2'])
+      # Verify patterns are activated with correct zones
+      activations = []
+      allow_any_instance_of(Pattern).to receive(:activate) do |pattern, zones|
+        activations << { pattern: pattern.name, zones: zones }
+      end
 
       display.activate
+
+      expect(activations).to contain_exactly(
+        { pattern: 'Pattern 1', zones: ['Zone 1'] },
+        { pattern: 'Pattern 2', zones: ['Zone 2'] }
+      )
     end
 
     it 'sleeps 0.6 seconds between operations' do
@@ -91,22 +99,20 @@ RSpec.describe Display, type: :model do
     end
 
     it 'performs operations in correct order' do
-      allow(display).to receive(:turn_off)
-      allow(zone_set).to receive(:activate)
-      allow_any_instance_of(Pattern).to receive(:activate)
       allow(display).to receive(:sleep)
 
       call_order = []
       allow(display).to receive(:turn_off) { call_order << :turn_off }
       allow(zone_set).to receive(:activate) { call_order << :zone_set }
-      allow(pattern1).to receive(:activate) { call_order << :pattern1 }
-      allow(pattern2).to receive(:activate) { call_order << :pattern2 }
+      allow_any_instance_of(Pattern).to receive(:activate) { call_order << :pattern }
 
       display.activate
 
       expect(call_order.first).to eq(:turn_off)
       expect(call_order[1]).to eq(:zone_set)
-      expect(call_order[2..-1]).to contain_exactly(:pattern1, :pattern2)
+      # Should have activated 2 patterns after zone_set
+      expect(call_order[2..-1]).to all(eq(:pattern))
+      expect(call_order[2..-1].length).to eq(2)
     end
 
     context 'with display having no patterns' do
