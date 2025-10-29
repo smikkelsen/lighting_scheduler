@@ -66,10 +66,200 @@ RSpec.describe Zone, type: :model do
     end
   end
 
+  describe '.update_cached' do
+    let(:zones_response) do
+      {
+        "zones" => {
+          "Front Porch" => {
+            "numPixels" => 100,
+            "portMap" => [{ "ctlrName" => "JellyFish", "phyPort" => 1, "phyStartIdx" => 0, "phyEndIdx" => 99 }]
+          },
+          "Back Yard" => {
+            "numPixels" => 200,
+            "portMap" => [{ "ctlrName" => "JellyFish", "phyPort" => 2, "phyStartIdx" => 0, "phyEndIdx" => 199 }]
+          }
+        }
+      }
+    end
+
+    before do
+      allow(WebsocketMessageHandler).to receive(:msg).and_return(zones_response)
+    end
+
+    it 'fetches zones from controller' do
+      expect(WebsocketMessageHandler).to receive(:msg).with(
+        hash_including(
+          cmd: 'toCtlrGet',
+          get: [['zones']]
+        )
+      )
+
+      Zone.update_cached
+    end
+
+    it 'creates new zones from controller response' do
+      expect {
+        Zone.update_cached
+      }.to change { Zone.current.count }.by(2)
+
+      expect(Zone.current.find_by(name: 'Front Porch')).to be_present
+      expect(Zone.current.find_by(name: 'Back Yard')).to be_present
+    end
+
+    it 'sets zone attributes correctly' do
+      Zone.update_cached
+
+      front_porch = Zone.current.find_by(name: 'Front Porch')
+      expect(front_porch.pixel_count).to eq(100)
+      expect(front_porch.port_map).to be_an(Array)
+      expect(front_porch.port_map.first['ctlrName']).to eq('JellyFish')
+    end
+
+    it 'generates consistent UUIDs based on hardware config' do
+      Zone.update_cached
+      zone1 = Zone.current.find_by(name: 'Front Porch')
+      uuid1 = zone1.uuid
+
+      # Update cached again
+      Zone.update_cached
+      zone2 = Zone.current.find_by(name: 'Front Porch')
+      uuid2 = zone2.uuid
+
+      # UUID should remain the same since hardware config is same
+      expect(uuid2).to eq(uuid1)
+    end
+
+    it 'updates existing zones with matching UUID' do
+      # Create a zone with matching hardware config but different name
+      existing_zone = Zone.create!(
+        name: 'Old Name',
+        pixel_count: 100,
+        port_map: [{ "ctlrName" => "JellyFish", "phyPort" => 1, "phyStartIdx" => 0, "phyEndIdx" => 99 }],
+        zone_set: nil
+      )
+
+      expect {
+        Zone.update_cached
+      }.not_to change { Zone.current.count }
+
+      # Name should be updated
+      existing_zone.reload
+      expect(existing_zone.name).to eq('Front Porch')
+    end
+
+    it 'deletes zones no longer in controller response' do
+      old_zone = create(:zone, name: 'Deleted Zone', zone_set: nil)
+
+      Zone.update_cached
+
+      expect(Zone.find_by(id: old_zone.id)).to be_nil
+    end
+
+    it 'does not delete zones in zone sets' do
+      zone_in_set = create(:zone, :in_set, name: 'Set Zone')
+
+      Zone.update_cached
+
+      expect(Zone.find_by(id: zone_in_set.id)).to be_present
+    end
+
+    it 'stores port_map as JSON array, not YAML string' do
+      Zone.update_cached
+
+      zone = Zone.current.first
+      expect(zone.port_map).to be_an(Array)
+      expect(zone.port_map).not_to be_a(String)
+    end
+
+    context 'with zone rename' do
+      it 'preserves zone identity when hardware config unchanged' do
+        Zone.update_cached
+        original_zone = Zone.current.find_by(name: 'Front Porch')
+        original_id = original_zone.id
+        original_uuid = original_zone.uuid
+
+        # Simulate controller returning renamed zone
+        renamed_response = {
+          "zones" => {
+            "Front Entrance" => {  # Renamed
+              "numPixels" => 100,
+              "portMap" => [{ "ctlrName" => "JellyFish", "phyPort" => 1, "phyStartIdx" => 0, "phyEndIdx" => 99 }]
+            }
+          }
+        }
+        allow(WebsocketMessageHandler).to receive(:msg).and_return(renamed_response)
+
+        Zone.update_cached
+
+        # Should update existing zone, not create new one
+        expect(Zone.current.count).to eq(1)
+        renamed_zone = Zone.current.find_by(uuid: original_uuid)
+        expect(renamed_zone.id).to eq(original_id)
+        expect(renamed_zone.name).to eq('Front Entrance')
+      end
+    end
+
+    context 'with hardware config change' do
+      it 'creates new zone when pixel_count changes' do
+        Zone.update_cached
+        original_count = Zone.current.count
+
+        # Change pixel count
+        modified_response = {
+          "zones" => {
+            "Front Porch" => {
+              "numPixels" => 150,  # Changed
+              "portMap" => [{ "ctlrName" => "JellyFish", "phyPort" => 1, "phyStartIdx" => 0, "phyEndIdx" => 149 }]
+            }
+          }
+        }
+        allow(WebsocketMessageHandler).to receive(:msg).and_return(modified_response)
+
+        expect {
+          Zone.update_cached
+        }.not_to change { Zone.current.count }
+
+        # Should have new UUID due to different hardware config
+        zone = Zone.current.find_by(name: 'Front Porch')
+        expect(zone.pixel_count).to eq(150)
+      end
+    end
+  end
+
   describe '#turn_off' do
-    it 'responds to turn_off method' do
-      zone = build(:zone)
-      expect(zone).to respond_to(:turn_off)
+    let(:zone) { create(:zone, name: 'Test Zone', zone_set: nil) }
+
+    before do
+      allow(WebsocketMessageHandler).to receive(:msg)
+    end
+
+    it 'calls turn_off with itself as the zone' do
+      expect(zone).to receive(:turn_off).and_call_original
+      expect(WebsocketMessageHandler).to receive(:msg).with(
+        hash_including(
+          cmd: 'toCtlrSet',
+          runPattern: hash_including(
+            state: 0,
+            zoneName: ['Test Zone']
+          )
+        )
+      )
+
+      zone.turn_off
+    end
+
+    it 'can turn off specific zones when passed as parameter' do
+      other_zone = create(:zone, name: 'Other Zone', zone_set: nil)
+
+      expect(WebsocketMessageHandler).to receive(:msg).with(
+        hash_including(
+          runPattern: hash_including(
+            zoneName: ['Other Zone']
+          )
+        )
+      )
+
+      zone.turn_off(other_zone)
     end
   end
 end

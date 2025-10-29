@@ -47,9 +47,76 @@ RSpec.describe Display, type: :model do
   end
 
   describe '#activate' do
-    it 'responds to activate method' do
-      display = build(:display)
-      expect(display).to respond_to(:activate)
+    let(:zone_set) { create(:zone_set, :with_zones) }
+    let(:display) { create(:display, zone_set: zone_set) }
+    let!(:pattern1) { create(:pattern, name: 'Pattern 1') }
+    let!(:pattern2) { create(:pattern, name: 'Pattern 2') }
+    let!(:display_pattern1) { create(:display_pattern, display: display, pattern: pattern1, zones: ['Zone 1']) }
+    let!(:display_pattern2) { create(:display_pattern, display: display, pattern: pattern2, zones: ['Zone 2']) }
+
+    before do
+      allow(WebsocketMessageHandler).to receive(:msg)
+      allow(Zone).to receive(:update_cached)
+    end
+
+    it 'turns off all zones first' do
+      expect(display).to receive(:turn_off).with(:all)
+      display.activate
+    end
+
+    it 'activates the zone set' do
+      allow(display).to receive(:turn_off)
+      expect(zone_set).to receive(:activate)
+      display.activate
+    end
+
+    it 'activates each pattern with its configured zones' do
+      allow(display).to receive(:turn_off)
+      allow(zone_set).to receive(:activate)
+
+      expect(pattern1).to receive(:activate).with(['Zone 1'])
+      expect(pattern2).to receive(:activate).with(['Zone 2'])
+
+      display.activate
+    end
+
+    it 'sleeps 0.6 seconds between operations' do
+      allow(display).to receive(:turn_off)
+      allow(zone_set).to receive(:activate)
+      allow_any_instance_of(Pattern).to receive(:activate)
+
+      expect(display).to receive(:sleep).with(0.6).twice
+
+      display.activate
+    end
+
+    it 'performs operations in correct order' do
+      allow(display).to receive(:turn_off)
+      allow(zone_set).to receive(:activate)
+      allow_any_instance_of(Pattern).to receive(:activate)
+      allow(display).to receive(:sleep)
+
+      call_order = []
+      allow(display).to receive(:turn_off) { call_order << :turn_off }
+      allow(zone_set).to receive(:activate) { call_order << :zone_set }
+      allow(pattern1).to receive(:activate) { call_order << :pattern1 }
+      allow(pattern2).to receive(:activate) { call_order << :pattern2 }
+
+      display.activate
+
+      expect(call_order.first).to eq(:turn_off)
+      expect(call_order[1]).to eq(:zone_set)
+      expect(call_order[2..-1]).to contain_exactly(:pattern1, :pattern2)
+    end
+
+    context 'with display having no patterns' do
+      let(:empty_display) { create(:display, zone_set: zone_set) }
+
+      it 'still activates zone set without errors' do
+        allow(empty_display).to receive(:turn_off)
+        expect(zone_set).to receive(:activate)
+        expect { empty_display.activate }.not_to raise_error
+      end
     end
   end
 
