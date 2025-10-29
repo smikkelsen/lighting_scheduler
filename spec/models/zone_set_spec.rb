@@ -37,13 +37,57 @@ RSpec.describe ZoneSet, type: :model do
   describe 'callbacks' do
     describe 'update_default_zone_set' do
       let!(:first_default) { create(:zone_set, :default) }
-      let!(:second_default) { create(:zone_set) }
+      let!(:second_zone_set) { create(:zone_set) }
 
-      it 'ensures only one default zone set' do
-        second_default.update(default_zone_set: true)
+      it 'ensures only one default zone set when updating existing' do
+        second_zone_set.update(default_zone_set: true)
         first_default.reload
         expect(first_default.default_zone_set).to be false
-        expect(second_default.default_zone_set).to be true
+        expect(second_zone_set.default_zone_set).to be true
+      end
+
+      it 'clears previous default when creating new default' do
+        third_zone_set = create(:zone_set, default_zone_set: true)
+        first_default.reload
+
+        expect(first_default.default_zone_set).to be false
+        expect(third_zone_set.default_zone_set).to be true
+      end
+
+      it 'allows multiple non-default zone sets' do
+        third = create(:zone_set)
+        fourth = create(:zone_set)
+
+        expect(ZoneSet.where(default_zone_set: false).count).to be >= 3
+      end
+
+      it 'does not affect other zone sets when saving non-default' do
+        second_zone_set.update(name: 'New Name')
+        first_default.reload
+
+        expect(first_default.default_zone_set).to be true
+      end
+
+      it 'ensures exactly one default exists after multiple updates' do
+        # Create multiple zone sets
+        third = create(:zone_set)
+        fourth = create(:zone_set)
+
+        # Toggle defaults multiple times
+        second_zone_set.update(default_zone_set: true)
+        third.update(default_zone_set: true)
+        fourth.update(default_zone_set: true)
+
+        # Should only have one default
+        expect(ZoneSet.where(default_zone_set: true).count).to eq(1)
+        expect(fourth.reload.default_zone_set).to be true
+      end
+
+      it 'handles setting default to false' do
+        first_default.update(default_zone_set: false)
+
+        # No defaults should exist now
+        expect(ZoneSet.where(default_zone_set: true).count).to eq(0)
       end
     end
   end
