@@ -5,7 +5,7 @@ module ZoneHelper
     if zones == :all
       zones = Zone.current.pluck(:name)
     elsif zones == :default
-      zones = ZoneSet.default.first&.zones&.pluck(:name)
+      zones = ZoneSet.default&.zones&.pluck(:name)
     else
       zones = Array.wrap(zones)
     end

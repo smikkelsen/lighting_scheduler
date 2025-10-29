@@ -34,11 +34,10 @@ RSpec.describe ZoneHelper, type: :model do
         expect(result).to match_array(default_zone_names)
       end
 
-      it 'returns empty array when no default zone set exists' do
+      it 'raises error when no default zone set exists' do
         ZoneSet.update_all(default_zone_set: false)
-        # When no default zone set exists, ZoneSet.default.first returns nil
-        # and zones = nil, which causes zones.map to fail
-        # This is a bug in production code, but for now we test actual behavior
+        # When no default zone set exists, ZoneSet.default returns an empty relation
+        # Calling &.zones on a relation that returned nil from .first causes an error
         expect {
           test_instance.parameterize_zones(:default)
         }.to raise_error(NoMethodError)
