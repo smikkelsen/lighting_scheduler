@@ -20,7 +20,8 @@ class ZoneSet < ApplicationRecord
   def self.create_from_current(name)
     zs = ZoneSet.create(name: name)
     Zone.current.each do |cz|
-      Zone.create(cz.dup.attributes.merge(zone_set_id: zs.id))
+      port_map = cz.port_map.is_a?(String) ? JSON.parse(cz.port_map) : cz.port_map
+      Zone.create(cz.dup.attributes.merge(zone_set_id: zs.id, port_map: port_map))
     end
     zs.reload
   end
@@ -28,7 +29,8 @@ class ZoneSet < ApplicationRecord
   def activate
     zone_hash = Hash.new
     self.zones.each do |z|
-      zone_hash[z.name] = { 'numPixels': z.pixel_count, 'portMap': z.port_map }
+      port_map = z.port_map.is_a?(String) ? JSON.parse(z.port_map) : z.port_map
+      zone_hash[z.name] = { 'numPixels': z.pixel_count, 'portMap': port_map }
     end
     WebsocketMessageHandler.msg({ cmd: 'toCtlrSet', save: true, zones: zone_hash })
     Zone.update_cached
