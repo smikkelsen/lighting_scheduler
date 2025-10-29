@@ -17,10 +17,7 @@ class Tag < ApplicationRecord
   def activate_random
     resource = self.displays.to_a.concat(self.patterns.to_a).shuffle.first
     if resource.is_a?(Pattern)
-      default_zs = ZoneSet.default
-      return unless default_zs
-      default_zs.activate
-      resource&.activate
+      activate_pattern(resource)
     else
       resource&.activate
     end
@@ -34,13 +31,20 @@ class Tag < ApplicationRecord
   end
 
   def activate_random_pattern
+    pattern = self.patterns.shuffle&.first
+    activate_pattern(pattern)
+    pattern
+  end
+
+  private
+  def activate_pattern(pattern)
     Display.turn_off(:all)
     sleep(0.6)
-    ZoneSet.default.first&.activate
+    default_zs = ZoneSet.default
+    return unless default_zs
+    default_zs.activate
     sleep(0.6)
-    pattern = self.patterns.shuffle&.first
     pattern&.activate(:all)
-    pattern
   end
 
 end
