@@ -15,11 +15,18 @@ class Tag < ApplicationRecord
   validates_presence_of :name
 
   def activate_random
-    resource = self.displays.to_a.concat(self.patterns.to_a).shuffle.first
+    selected_displays = self.displays.shuffle
+    selected_patterns = self.patterns.shuffle
+    Rails.logger.debug("#{selected_displays.count} displays and #{selected_patterns.count} patterns selected for tag #{self.name}")
+    resource = selected_displays.to_a.concat(selected_patterns.to_a).shuffle.first
     if resource.is_a?(Pattern)
+      Rails.logger.debug("Pattern selected: #{resource.name}")
       activate_pattern(resource)
+    elsif resource.is_a?(Display)
+      Rails.logger.debug("Display selected: #{resource.name}")
+      resource.activate
     else
-      resource&.activate
+      Rails.logger.debug("No resource found")
     end
     resource
   end
