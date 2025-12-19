@@ -272,4 +272,160 @@ RSpec.describe Zone, type: :model do
       zone.turn_off(other_zone)
     end
   end
+
+  describe 'UUID uniqueness' do
+    let(:zone_set) { create(:zone_set) }
+
+    context 'within same zone set' do
+      it 'prevents duplicate UUIDs in same zone set' do
+        uuid = SecureRandom.uuid
+        create(:zone, uuid: uuid, zone_set: zone_set)
+
+        duplicate_zone = build(:zone, uuid: uuid, zone_set: zone_set)
+        expect(duplicate_zone).not_to be_valid
+        expect(duplicate_zone.errors[:uuid]).to include('has already been taken')
+      end
+    end
+
+    context 'across different zone sets' do
+      let(:other_zone_set) { create(:zone_set) }
+
+      it 'allows same UUID in different zone sets' do
+        uuid = SecureRandom.uuid
+        create(:zone, uuid: uuid, zone_set: zone_set)
+        duplicate_zone = build(:zone, uuid: uuid, zone_set: other_zone_set)
+
+        expect(duplicate_zone).to be_valid
+      end
+    end
+
+    context 'in current zones' do
+      it 'prevents duplicate UUIDs among current zones' do
+        uuid = SecureRandom.uuid
+        create(:zone, uuid: uuid, zone_set: nil)
+
+        duplicate_zone = build(:zone, uuid: uuid, zone_set: nil)
+        expect(duplicate_zone).not_to be_valid
+      end
+
+      it 'allows same UUID in current zones and zone set' do
+        uuid = SecureRandom.uuid
+        create(:zone, uuid: uuid, zone_set: nil)
+        zone_with_set = build(:zone, uuid: uuid, zone_set: zone_set)
+
+        expect(zone_with_set).to be_valid
+      end
+    end
+  end
+
+  describe 'edge cases' do
+    context 'with zone names' do
+      it 'handles extremely long zone names' do
+        long_name = 'Z' * 1000
+        zone = create(:zone, name: long_name, zone_set: nil)
+        expect(zone.name).to eq(long_name)
+      end
+
+      it 'handles zone names with special characters' do
+        special_name = "Zone's \"Name\" <with> & symbols!"
+        zone = create(:zone, name: special_name, zone_set: nil)
+        expect(zone.name).to eq(special_name)
+      end
+
+      it 'handles zone names with Unicode characters' do
+        unicode_name = '区域 🎄 Зона'
+        zone = create(:zone, name: unicode_name, zone_set: nil)
+        expect(zone.name).to eq(unicode_name)
+      end
+    end
+
+    context 'with port_map data' do
+      it 'handles empty port_map array' do
+        zone = create(:zone, port_map: [], zone_set: nil)
+        expect(zone.port_map).to eq([])
+      end
+
+      it 'handles complex nested port_map structures' do
+        complex_map = [
+          {
+            "ctlrName" => "Controller1",
+            "phyPort" => 1,
+            "phyStartIdx" => 0,
+            "phyEndIdx" => 99,
+            "metadata" => {
+              "location" => "front",
+              "tags" => ["outdoor", "primary"]
+            }
+          }
+        ]
+        zone = create(:zone, port_map: complex_map, zone_set: nil)
+        expect(zone.port_map).to eq(complex_map)
+      end
+    end
+
+    context 'with pixel_count' do
+      it 'handles zero pixel count' do
+        zone = create(:zone, pixel_count: 0, zone_set: nil)
+        expect(zone.pixel_count).to eq(0)
+      end
+
+      it 'handles very large pixel counts' do
+        zone = create(:zone, pixel_count: 999999, zone_set: nil)
+        expect(zone.pixel_count).to eq(999999)
+      end
+
+      it 'handles negative pixel counts' do
+        zone = create(:zone, pixel_count: -100, zone_set: nil)
+        expect(zone.pixel_count).to eq(-100)
+      end
+    end
+  end
+
+  describe '.update_cached error handling' do
+    context 'when WebSocket returns malformed data' do
+      before do
+        allow(WebsocketMessageHandler).to receive(:msg).and_return({ "zones" => {} })
+      end
+
+      it 'handles empty zones response gracefully' do
+        expect {
+          Zone.update_cached
+        }.not_to raise_error
+      end
+
+      it 'deletes all current zones when controller returns empty list' do
+        old_zone = create(:zone, zone_set: nil)
+        Zone.update_cached
+        expect(Zone.find_by(id: old_zone.id)).to be_nil
+      end
+    end
+
+    context 'when zone data is missing required fields' do
+      let(:incomplete_zones) do
+        {
+          "zones" => {
+            "Incomplete Zone" => {
+              "numPixels" => nil,
+              "portMap" => nil
+            }
+          }
+        }
+      end
+
+      before do
+        allow(WebsocketMessageHandler).to receive(:msg).and_return(incomplete_zones)
+      end
+
+      it 'still creates zone with nil values' do
+        expect {
+          Zone.update_cached
+        }.not_to raise_error
+
+        zone = Zone.current.find_by(name: 'Incomplete Zone')
+        expect(zone).to be_present
+        expect(zone.pixel_count).to be_nil
+        expect(zone.port_map).to be_nil
+      end
+    end
+  end
 end

@@ -1,6 +1,12 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(bundle exec rspec:*)",
+      "Bash(bundle exec rails runner:*)"
+    ]
+  },
   "sandbox": {
-    "autoAllowBashIfSandboxed": true,
-    "enabled": true
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true
   }
 }

@@ -88,7 +88,7 @@ bin/rails db:migrate
 # Password: password
 ```
 
-## Server Commands
+## Development Commands
 
 ```bash
 # Start Rails server (with CSS compilation via dartsass)
@@ -103,6 +103,24 @@ bundle exec rails console
 # Access ActiveAdmin UI
 # Navigate to http://localhost:3000 and login with seeded credentials
 ```
+
+## Testing
+
+```bash
+# Run all tests
+bundle exec rspec
+
+# Run specific test file
+bundle exec rspec spec/models/pattern_spec.rb
+
+# Run specific test by line number
+bundle exec rspec spec/models/pattern_spec.rb:23
+
+# Run tests matching a description
+bundle exec rspec spec/models/pattern_spec.rb -e "activate"
+```
+
+Test suite uses RSpec with FactoryBot for fixtures and Shoulda Matchers for common validations.
 
 ## Syncing with Controller
 

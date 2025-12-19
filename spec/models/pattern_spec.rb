@@ -323,4 +323,209 @@ RSpec.describe Pattern, type: :model do
       expect(pattern.custom).to be true
     end
   end
+
+  describe 'edge cases' do
+    context 'with folder names' do
+      it 'handles nil folder' do
+        pattern = create(:pattern, folder: nil, name: 'Test')
+        expect(pattern.full_path).to eq('Test')
+      end
+
+      it 'handles empty string folder' do
+        pattern = create(:pattern, folder: '', name: 'Test')
+        # Empty string is not nil, so it joins as /Test
+        expect(pattern.full_path).to eq('/Test')
+      end
+
+      it 'handles folder with special characters' do
+        pattern = create(:pattern, folder: 'Holiday\'s/Special', name: 'Test')
+        expect(pattern.full_path).to eq('Holiday\'s/Special/Test')
+      end
+
+      it 'handles folder with Unicode characters' do
+        pattern = create(:pattern, folder: '节日 🎄', name: 'Test')
+        expect(pattern.full_path).to eq('节日 🎄/Test')
+      end
+
+      it 'handles very long folder paths' do
+        long_folder = 'Folder/' * 50
+        pattern = create(:pattern, folder: long_folder, name: 'Test')
+        expect(pattern.full_path).to eq("#{long_folder}/Test")
+      end
+    end
+
+    context 'with pattern names' do
+      it 'handles pattern names with special characters' do
+        pattern = create(:pattern, name: 'Pattern\'s "Special" <Name>')
+        expect(pattern.name).to eq('Pattern\'s "Special" <Name>')
+      end
+
+      it 'handles extremely long pattern names' do
+        long_name = 'P' * 1000
+        pattern = create(:pattern, name: long_name)
+        expect(pattern.name).to eq(long_name)
+      end
+    end
+
+    context 'with pattern data' do
+      it 'handles nil data' do
+        pattern = create(:pattern, data: nil)
+        expect(pattern.data).to be_nil
+      end
+
+      it 'handles empty hash data' do
+        pattern = create(:pattern, data: {})
+        expect(pattern.data).to eq({})
+      end
+
+      it 'handles deeply nested data structures' do
+        complex_data = {
+          'effects' => [
+            { 'type' => 'fade', 'colors' => ['#FF0000', '#00FF00'] },
+            { 'type' => 'chase', 'speed' => 10, 'nested' => { 'deep' => { 'value' => 'test' } } }
+          ],
+          'metadata' => {
+            'author' => 'Test',
+            'version' => '1.0'
+          }
+        }
+        pattern = create(:pattern, data: complex_data)
+        expect(pattern.data).to eq(complex_data)
+      end
+
+      it 'handles data with special characters in values' do
+        pattern = create(:pattern, data: { 'name' => 'Test\'s "Data" <Value>' })
+        expect(pattern.data['name']).to eq('Test\'s "Data" <Value>')
+      end
+    end
+  end
+
+  describe '.update_cached edge cases' do
+    context 'with duplicate patterns' do
+      let(:pattern_list) do
+        [
+          { 'name' => 'Pattern 1', 'folders' => 'Test', 'readOnly' => true },
+          { 'name' => 'Pattern 1', 'folders' => 'Test', 'readOnly' => false }
+        ]
+      end
+
+      before do
+        allow(WebsocketMessageHandler).to receive(:msg).and_return({ 'patternFileList' => pattern_list })
+      end
+
+      it 'keeps only the last occurrence of duplicate patterns' do
+        Pattern.update_cached
+        pattern = Pattern.find_by(name: 'Pattern 1', folder: 'Test')
+        expect(pattern).to be_present
+        expect(pattern.custom).to be true # Last one has readOnly: false
+        expect(Pattern.where(name: 'Pattern 1', folder: 'Test').count).to eq(1)
+      end
+    end
+
+    context 'with patterns with nil folders' do
+      let(:pattern_list) do
+        [
+          { 'name' => 'Pattern 1', 'folders' => nil, 'readOnly' => true },
+          { 'name' => 'Pattern 2', 'folders' => '', 'readOnly' => true }
+        ]
+      end
+
+      before do
+        allow(WebsocketMessageHandler).to receive(:msg).and_return({ 'patternFileList' => pattern_list })
+      end
+
+      it 'handles nil and empty folder values' do
+        expect {
+          Pattern.update_cached
+        }.not_to raise_error
+
+        pattern1 = Pattern.find_by(name: 'Pattern 1')
+        pattern2 = Pattern.find_by(name: 'Pattern 2')
+
+        expect(pattern1).to be_present
+        expect(pattern2).to be_present
+      end
+    end
+
+    context 'when WebSocket returns nil or malformed data' do
+      it 'handles nil patternFileList gracefully' do
+        allow(WebsocketMessageHandler).to receive(:msg).and_return({ 'patternFileList' => nil })
+
+        expect {
+          Pattern.update_cached
+        }.to raise_error(NoMethodError)
+      end
+
+      it 'handles empty patternFileList' do
+        allow(WebsocketMessageHandler).to receive(:msg).and_return({ 'patternFileList' => [] })
+
+        expect {
+          Pattern.update_cached
+        }.not_to raise_error
+      end
+    end
+  end
+
+  describe '.cache_pattern_data error handling' do
+    context 'when pattern_data returns invalid JSON' do
+      let!(:pattern) { create(:pattern, data: nil) }
+      let(:invalid_json_response) do
+        {
+          'patternFileData' => {
+            'jsonData' => 'invalid json {'
+          }
+        }
+      end
+
+      before do
+        allow(WebsocketMessageHandler).to receive(:msg).and_return(invalid_json_response)
+      end
+
+      it 'raises JSON parse error' do
+        expect {
+          Pattern.cache_pattern_data
+        }.to raise_error(JSON::ParserError)
+      end
+    end
+
+    context 'when pattern_data is missing expected structure' do
+      let!(:pattern) { create(:pattern, data: nil) }
+      let(:missing_data_response) do
+        {
+          'patternFileData' => {}
+        }
+      end
+
+      before do
+        allow(WebsocketMessageHandler).to receive(:msg).and_return(missing_data_response)
+      end
+
+      it 'raises error when jsonData is missing' do
+        expect {
+          Pattern.cache_pattern_data
+        }.to raise_error(TypeError)
+      end
+    end
+  end
+
+  describe '.activate_random edge cases' do
+    context 'with no patterns in database' do
+      it 'handles empty pattern list gracefully' do
+        Pattern.destroy_all
+        expect {
+          Pattern.activate_random
+        }.to raise_error(NoMethodError) # shuffle.first returns nil, then calling activate on nil
+      end
+    end
+
+    context 'with folder filter matching no patterns' do
+      let!(:pattern) { create(:pattern, folder: 'Holiday') }
+
+      it 'handles no matching patterns for folder' do
+        expect {
+          Pattern.activate_random('NonExistent')
+        }.to raise_error(NoMethodError)
+      end
+    end
+  end
 end

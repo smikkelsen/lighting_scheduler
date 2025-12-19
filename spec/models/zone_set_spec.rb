@@ -179,5 +179,83 @@ RSpec.describe ZoneSet, type: :model do
 
       zone_set.activate
     end
+
+    context 'with zone set that has no zones' do
+      let(:empty_zone_set) { create(:zone_set) }
+
+      it 'sends empty zones hash to controller' do
+        expect(WebsocketMessageHandler).to receive(:msg) do |arg|
+          expect(arg[:zones]).to eq({})
+        end
+
+        empty_zone_set.activate
+      end
+    end
+
+    context 'with zone names containing special characters' do
+      let!(:special_zone) { create(:zone, name: "Zone's \"Special\" <Name>", pixel_count: 50, port_map: [{"port" => 3}], zone_set: zone_set) }
+
+      it 'handles special characters in zone names' do
+        expect(WebsocketMessageHandler).to receive(:msg) do |arg|
+          expect(arg[:zones]["Zone's \"Special\" <Name>"]).to be_present
+        end
+
+        zone_set.activate
+      end
+    end
+  end
+
+  describe 'deletion restrictions' do
+    let(:zone_set) { create(:zone_set) }
+    let(:display) { create(:display, zone_set: zone_set) }
+
+    it 'prevents deletion when displays reference the zone set' do
+      display # Create the display
+
+      expect {
+        zone_set.destroy
+      }.to raise_error(ActiveRecord::DeleteRestrictionError)
+
+      expect(ZoneSet.find_by(id: zone_set.id)).to be_present
+    end
+
+    it 'allows deletion when no displays reference the zone set' do
+      expect {
+        zone_set.destroy
+      }.not_to raise_error
+
+      expect(ZoneSet.find_by(id: zone_set.id)).to be_nil
+    end
+
+    it 'deletes associated zones when zone set is deleted' do
+      zone1 = create(:zone, zone_set: zone_set)
+      zone2 = create(:zone, zone_set: zone_set)
+
+      zone_set.destroy
+
+      expect(Zone.find_by(id: zone1.id)).to be_nil
+      expect(Zone.find_by(id: zone2.id)).to be_nil
+    end
+  end
+
+  describe '.create_from_current edge cases' do
+    context 'when no current zones exist' do
+      it 'creates zone set with no zones' do
+        zone_set = ZoneSet.create_from_current('Empty Set')
+        expect(zone_set).to be_persisted
+        expect(zone_set.zones.count).to eq(0)
+      end
+    end
+
+    context 'with duplicate names' do
+      it 'fails when creating zone set with duplicate name' do
+        create(:zone_set, name: 'Duplicate Name')
+        # create_from_current doesn't use create! so it won't raise on validation error
+        # It creates the zone set, then reloads it which will fail if save failed
+        expect {
+          ZoneSet.create_from_current('Duplicate Name')
+        }.to raise_error(ActiveRecord::RecordNotFound)
+      end
+    end
   end
 end
