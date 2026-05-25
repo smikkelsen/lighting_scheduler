@@ -12,6 +12,8 @@ This is a Rails 7.2 application (Ruby 3.3.10) for managing and controlling holid
 - **WebsocketMessageHandler** (`app/lib/websocket_message_handler.rb`): Core communication module that sends JSON commands to the Jellyfish controller via WebSocket on port 9000
 - Controller IP configured via `WEBSOCKET_CONTROLLER_IP` environment variable
 - All hardware communication uses EventMachine for async WebSocket connections
+- Has a hard 5-second timeout; `WebsocketMessageHandler.msg` returns `nil` when the controller doesn't respond — callers must tolerate this
+- **ZoneBuilder** (`app/lib/zone_builder.rb`): Helper for constructing a new `Zone` with a `port_map` by adding ports incrementally (`#add(port_number, start_light, end_light, reverse)`); requires at least one existing current zone to read `ctlrName` from
 
 ### Domain Model Hierarchy
 
@@ -120,7 +122,7 @@ bundle exec rspec spec/models/pattern_spec.rb:23
 bundle exec rspec spec/models/pattern_spec.rb -e "activate"
 ```
 
-Test suite uses RSpec with FactoryBot for fixtures and Shoulda Matchers for common validations.
+Test suite uses RSpec with FactoryBot for fixtures and Shoulda Matchers for common validations. Specs mock `WebsocketMessageHandler.msg` rather than hitting real hardware. See `TESTING.md` for a fuller breakdown of coverage areas (model/lib/integration/API specs) and known regressions tracked by tests.
 
 ## Syncing with Controller
 
@@ -162,3 +164,5 @@ All API endpoints use HTTP Basic Authentication with `API_KEY`/`API_TOKEN`.
 - "Current zones" (`Zone.current`) are the live zones in the controller; zones in ZoneSets are snapshots
 - Only one ZoneSet can be marked as `default_zone_set` at a time (enforced by `after_save` callback)
 - When a Display is deleted, its ZoneSet cannot have any other Displays referencing it (`dependent: :restrict_with_exception`)
+- `DisplayPattern#zones` is a JSONB array of zone UUIDs; legacy records stored YAML strings — a `before_save` normalizes YAML → JSON array and strips empty strings, so don't reintroduce `serialize :zones`
+- Ruby version is pinned by `mise.toml` (3.3.10); `bin/dev` reads `Procfile.dev` to run Rails plus `dartsass:watch` for CSS
